@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>QRYPTAI</title>
+  <style>
+    body{background:#0b0b0a;color:#3890a9;font-family:Arial;text-align:center}
+    h1{color:#60c1e1;text-shadow:0 0 10px#d36b95}
+    .box{
+      background:#1a1a1a;
+      padding:15px;
+      margin:10px;
+      border-radius:10px;
+      width:300px;
+      height:350px;   /* ✅ Fixed height for equal size */
+      display:inline-block;
+      vertical-align:top;
+      box-shadow:0 0 10px
+    }
+    button{background:#da59a7;border:none;padding:8px 12px;border-radius:6px;cursor:pointer}
+    #summaryBox,#chat{margin-top:10px;background:#101010;padding:10px;border-radius:8px;text-align:left}
+    #chat{height:200px;overflow-y:auto}
+    .msg{margin:5px 0;padding:6px 10px;border-radius:6px;max-width:80%}
+    .user{background:#3fbc67;color:#000;float:right}
+    .bot{background:#60c1e1;color:#000;float:left}
+  </style>
+</head>
+<body>
+  <h1>⚡ QRYPTAI ⚡</h1> 
+  <div class="box">
+    <h3>Encrypt & Summarize</h3>
+    <input type="file" id="file"><br>
+    <button onclick="upload()">Encrypt</button>
+    <p id="status"></p>
+    <div id="summaryBox" style="display:none">
+      <b>Summary:</b><p id="summary"></p>
+    </div>
+  </div>
+
+  <div class="box">
+    <h3>Ask AI</h3>
+    <div id="chat"></div>
+    <input id="q" placeholder="Type a question"><br>
+    <button onclick="ask()">Ask</button>
+  </div>
+
+  <p>📁 Files Encrypted: <span id="fileCount">0</span></p>
+
+  <script>
+    let fileCounter=0;
+    async function upload(){
+      let f=document.getElementById("file").files[0]; if(!f)return alert("Pick file");
+      let fd=new FormData(); fd.append("file",f);
+      document.getElementById("status").innerText="Encrypting...";
+      let r=await fetch("http://localhost:5000/upload",{method:"POST",body:fd});
+      let d=await r.json();
+      document.getElementById("status").innerText=d.message;
+      document.getElementById("summaryBox").style.display="block";
+      document.getElementById("summary").innerText=d.summary;
+      document.getElementById("fileCount").innerText=++fileCounter;
+    }
+    async function ask(){
+      let q=document.getElementById("q").value; if(!q)return;
+      let chat=document.getElementById("chat");
+      chat.innerHTML+=`<div class="msg user">${q}</div>`;
+      let r=await fetch("http://localhost:5000/question",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({question:q})});
+      let d=await r.json();
+      chat.innerHTML+=`<div class="msg bot">${d.answer}</div>`;
+      chat.scrollTop=chat.scrollHeight;
+      document.getElementById("q").value="";
+    }
+  </script>
+</body>
+</html>
+
